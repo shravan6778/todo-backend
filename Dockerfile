@@ -1,21 +1,20 @@
-# Use Eclipse Temurin JDK 17 as base image
-FROM eclipse-temurin:17-jdk-alpine AS build
+# Build stage
+FROM maven:3.9.5-eclipse-temurin-17-alpine AS build
 
 # Set working directory
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
+# Copy pom.xml
+COPY pom.xml .
 
-# Download dependencies
-RUN ./mvnw dependency:go-offline
+# Download dependencies (this layer will be cached)
+RUN mvn dependency:go-offline -B
 
 # Copy source code
 COPY src ./src
 
 # Build application
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
 # Production stage
 FROM eclipse-temurin:17-jre-alpine
